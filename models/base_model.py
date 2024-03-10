@@ -1,69 +1,53 @@
 #!/usr/bin/python3
-"""
-The Base Module for AirBnB Console
-"""
-from unittest import result
-import uuid
+"""Defines the BaseModel class."""
+import models
+from uuid import uuid4
 from datetime import datetime
 
 
 class BaseModel:
-    """The Base class"""
+    """Represents a BaseModel of the HBnB project."""
 
     def __init__(self, *args, **kwargs):
-        """
-        instatiates an object with it's
-        attributes
+        """Initialize a new BaseModel.
+
         Args:
-            *args (tuple): Ignored.
-            kwargs: A dictionary of attribute keys-value pairs.
+            *args (any): Unused args.
+            **kwargs (dict): Key/value args.
         """
-        if len(kwargs) > 0:
-            for key, value in kwargs.items():
-                if key == '__class__':
-                    continue
-                if key == 'created_at' or key == 'updated_at':
-                    value = datetime.fromisoformat(value)
-                setattr(self, key, value)
+
+        self.id = str(uuid4())
+        self.created_at = datetime.today()
+        self.updated_at = datetime.today()
+        dtime = "%Y-%m-%dT%H:%M:%S.%f"
+        if len(kwargs) != 0:
+            for key, val in kwargs.items():
+                if key == "created_at" or key == "updated_at":
+                    self.__dict__[key] = datetime.strptime(val, dtime)
+                else:
+                    self.__dict__[key] = val
         else:
-            self.id = str(uuid.uuid4())
-            self.created_at = datetime.now()
-            self.updated_at = datetime.now()
-
-            from models import storage
-            storage.new(self)
-
-    def __str__(self):
-        """string representation
-        Returns: A string representation
-        """
-        return "[{}] ({}) {}".format(
-            self.__class__.__name__,
-            self.id,
-            self.__dict__
-        )
+            models.storage.new(self)
 
     def save(self):
-        """
-        Updates the public instance attribute updated_at
-        with the current datetime
-        """
-        from models import storage
-        self.updated_at = datetime.now()
-        storage.save()
+        """Update 'updated_at' with current datetime."""
+        self.updated_at = datetime.today()
+        models.storage.save()
+
+    def __str__(self):
+        """Return the print/str representation."""
+        name_cls = self.__class__.__name__
+        return "[{}] ({}) {}".format(name_cls, self.id, self.__dict__)
 
     def to_dict(self):
+        """Return the dictionary.
+
+        Includes key/value pair __class__ representing
+        the class name of the object.
         """
-        Returns a dictionary containing all keys/values of __dict__
-        of the instance
-        Returns: Dict of attributes
-        """
-        result = {}
-        for key, value in self.__dict__.items():
-            if isinstance(value, datetime):
-                result[key] = value.isoformat()
-            else:
-                result[key] = value
-        result['__class__'] = self.__class__.__name__
-        return result
+        o_dict = self.__dict__.copy()
+        o_dict["created_at"] = self.created_at.isoformat()
+        o_dict["updated_at"] = self.updated_at.isoformat()
+        o_dict["__class__"] = self.__class__.__name__
+        return o_dict
 
